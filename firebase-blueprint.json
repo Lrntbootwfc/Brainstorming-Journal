@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "JournalSession": {
+      "title": "JournalSession",
+      "description": "Multi-turn reflection and brainstorming journal session with AI insights and actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 },
+        "category": { "type": "string", "maxLength": 64 },
+        "mood": { "type": "string", "maxLength": 64 },
+        "sentiment": { "type": "string", "maxLength": 64 },
+        "summary": { "type": "string", "maxLength": 4000 }
+      },
+      "required": ["id", "userId", "title", "createdAt", "updatedAt"]
+    },
+    "PersonalGoal": {
+      "title": "PersonalGoal",
+      "description": "User's intentional personal goal with milestones and reflections",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "intention": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["not_started", "in_progress", "paused", "completed", "abandoned"] },
+        "progress": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "title", "intention", "status", "progress", "createdAt", "updatedAt"]
+    },
+    "VisionCard": {
+      "title": "VisionCard",
+      "description": "An AI-powered visual aspiration or future moment manifestation card",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "prompt": { "type": "string", "maxLength": 1000 },
+        "imageUrl": { "type": "string", "maxLength": 2048 },
+        "title": { "type": "string", "maxLength": 200 },
+        "aspectRatio": { "type": "string", "enum": ["1:1", "16:9", "4:3"] },
+        "category": { "type": "string", "maxLength": 100 },
+        "reflection": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["done", "generating", "failed"] },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "prompt", "imageUrl", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/interactions/{sessionId}": {
+      "schema": "JournalSession",
+      "description": "User's private reflection sessions and brainstorming conversations"
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": "PersonalGoal",
+      "description": "User's private personal goals and milestone plans"
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": "object",
+      "description": "User's personal preferences, themes, and thread tracking state"
+    },
+    "/users/{userId}/vision_cards/{cardId}": {
+      "schema": "VisionCard",
+      "description": "User's private AI-generated vision board cards"
+    }
+  }
+}

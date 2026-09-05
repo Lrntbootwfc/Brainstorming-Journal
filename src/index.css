@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --theme-primary: #00838f;
+    --theme-primary-hover: #006064;
+    --theme-accent: #26a69a;
+    --theme-bg: #f5f9fa;
+    --theme-card-bg: #ffffff;
+    --theme-chip-bg: #e0f2f1;
+    --theme-chip-text: #00695c;
+    --theme-border: #dbe7eb;
+    --theme-ink: #1e293b;
+  }
+
+  body {
+    background-color: var(--theme-bg);
+    color: var(--theme-ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .font-serif {
+    font-family: 'Newsreader', Georgia, Cambria, serif;
+  }
+}
+
+/* Atmosphere Theme Presets */
+.theme-journey-teal {
+  --theme-primary: #00838f;
+  --theme-primary-hover: #006064;
+  --theme-accent: #26a69a;
+  --theme-bg: #f5f9fa;
+  --theme-card-bg: #ffffff;
+  --theme-chip-bg: #e0f2f1;
+  --theme-chip-text: #00695c;
+  --theme-border: #dbe7eb;
+}
+
+.theme-sunset-amber {
+  --theme-primary: #d97706;
+  --theme-primary-hover: #b45309;
+  --theme-accent: #f59e0b;
+  --theme-bg: #fffdf7;
+  --theme-card-bg: #ffffff;
+  --theme-chip-bg: #fef3c7;
+  --theme-chip-text: #92400e;
+  --theme-border: #fde68a;
+}
+
+.theme-alpine-forest {
+  --theme-primary: #2e7d32;
+  --theme-primary-hover: #1b5e20;
+  --theme-accent: #4caf50;
+  --theme-bg: #f3f8f4;
+  --theme-card-bg: #ffffff;
+  --theme-chip-bg: #e8f5e9;
+  --theme-chip-text: #1b5e20;
+  --theme-border: #c8e6c9;
+}
+
+.theme-midnight-voyage {
+  --theme-primary: #4338ca;
+  --theme-primary-hover: #3730a3;
+  --theme-accent: #6366f1;
+  --theme-bg: #f5f4fb;
+  --theme-card-bg: #ffffff;
+  --theme-chip-bg: #ede9fe;
+  --theme-chip-text: #4338ca;
+  --theme-border: #ddd6fe;
+}
+
+.theme-classic-parchment {
+  --theme-primary: #78350f;
+  --theme-primary-hover: #451a03;
+  --theme-accent: #b45309;
+  --theme-bg: #faf6ee;
+  --theme-card-bg: #ffffff;
+  --theme-chip-bg: #fef3c7;
+  --theme-chip-text: #78350f;
+  --theme-border: #e8decb;
+}
+
+/* Paper Tone Classes */
+.paper-journey-clean {
+  --theme-bg: #f5f9fa;
+  --theme-card-bg: #ffffff;
+}
+
+.paper-cream {
+  --theme-bg: #fbf8f0;
+  --theme-card-bg: #fffdfa;
+}
+
+.paper-parchment {
+  --theme-bg: #f5efe4;
+  --theme-card-bg: #faf5ec;
+}
+
+.paper-moleskine {
+  --theme-bg: #fffdf7;
+  --theme-card-bg: #ffffff;
+}
+
+.paper-kraft {
+  --theme-bg: #eee4d3;
+  --theme-card-bg: #f7f1e6;
+}
+
+/* Ink Style Classes */
+.ink-teal {
+  --theme-ink: #00838f;
+}
+
+.ink-charcoal {
+  --theme-ink: #1e293b;
+}
+
+.ink-espresso {
+  --theme-ink: #451a03;
+}
+
+.ink-navy {
+  --theme-ink: #1e1b4b;
+}
+
+/* Dynamic Component Classes */
+.theme-btn-primary {
+  background-color: var(--theme-primary);
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.theme-btn-primary:hover {
+  background-color: var(--theme-primary-hover);
+  transform: translateY(-1px);
+}
+
+.theme-accent-text {
+  color: var(--theme-primary);
+}
+
+.theme-chip {
+  background-color: var(--theme-chip-bg);
+  color: var(--theme-chip-text);
+  border: 1px solid var(--theme-border);
+}
+
+.theme-card {
+  background-color: var(--theme-card-bg);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
+}
+
+/* Notebook Ruled Lines */
+.notebook-ruled {
+  background-image: linear-gradient(transparent 31px, rgba(148, 163, 184, 0.25) 32px) !important;
+  background-size: 100% 32px !important;
+  line-height: 32px !important;
+}
+
+/* Paper Grid */
+.paper-grid {
+  background-size: 20px 20px !important;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.2) 1px, transparent 1px) !important;
+}
+
+/* Custom smooth paper scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+

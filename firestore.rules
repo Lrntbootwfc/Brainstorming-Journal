@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Isolated user-level data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Reflection sessions and chat interactions
+      match /interactions/{interactionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Personal goals and milestones
+      match /goals/{goalId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // User preferences, themes, thread tracking, daily moods, custom folders
+      match /settings/{settingId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Vision cards
+      match /vision_cards/{cardId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Recursive fallback for any nested subcollections
+      match /{allSubcollections=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
