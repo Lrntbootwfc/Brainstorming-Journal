@@ -342,7 +342,18 @@ export default function App() {
       await signInWithGoogle();
     } catch (err: any) {
       console.error('Sign in failed:', err);
-      setAuthError(err.message || 'Failed to authenticate with Google.');
+      const isPopupBlocked = err.code === 'auth/popup-blocked' || 
+        (err.message && err.message.toLowerCase().includes('popup-blocked'));
+      const isPopupClosed = err.code === 'auth/popup-closed-by-user';
+      
+      if (isPopupBlocked) {
+        setAuthError('Sign-in popup was blocked by your browser. Please allow popups or open this page in a new window to sign in.');
+      } else if (isPopupClosed) {
+        // User voluntarily dismissed popup, no alarm needed
+        setAuthError(null);
+      } else {
+        setAuthError(err.message || 'Failed to authenticate with Google.');
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -362,7 +373,8 @@ export default function App() {
   const handleNewSession = async (
     category: JournalCategory = 'Journal',
     withoutAI: boolean = false,
-    folderId?: string
+    folderId?: string,
+    includeInAIHistory?: boolean
   ) => {
     if (!user) return;
     const base = createBlankSession(user.uid, category as any);
@@ -370,8 +382,9 @@ export default function App() {
       ...base,
       category,
       withoutAI: Boolean(withoutAI),
+      includeInAIHistory: Boolean(includeInAIHistory),
       folderId: folderId || undefined,
-      title: withoutAI ? 'Pure Reflection (Without AI)' : 'New Reflection',
+      title: withoutAI ? 'Pure Journaling (Without AI)' : 'New Reflection',
     };
     setSessions((prev) => [newSession, ...prev]);
     setActiveSessionId(newSession.id);
@@ -545,9 +558,11 @@ export default function App() {
     }
 
     // If this session is pure journaling without live AI, skip conversational Gemini turn.
-    // Trigger background auto-title & summary indexing so the entry is fully analyzed by AI!
+    // If user opted to include this entry in their AI history, trigger background auto-title & summary indexing.
     if (currentSession.withoutAI) {
-      triggerAutoTitleAndSummary(sessionWithUserMsg);
+      if (currentSession.includeInAIHistory) {
+        triggerAutoTitleAndSummary(sessionWithUserMsg);
+      }
       return;
     }
 
@@ -748,6 +763,9 @@ export default function App() {
             isLoading={authLoading}
             user={user}
             errorMessage={authError}
+            theme={theme}
+            themeConfig={themeConfig}
+            onUpdateTheme={handleUpdateTheme}
           />
         ) : activeView === 'editor' && currentSession ? (
           <JournalEditor
@@ -768,7 +786,7 @@ export default function App() {
           <DashboardView
             user={user}
             sessions={sessions}
-            onNewSession={(category, withoutAI, folderId) => handleNewSession(category, withoutAI, folderId)}
+            onNewSession={(category, withoutAI, folderId, includeInAIHistory) => handleNewSession(category, withoutAI, folderId, includeInAIHistory)}
             onSelectSession={handleSelectSession}
             onUpdateSession={handleUpdateAnySession}
             onDeleteSession={handleDeleteSession}

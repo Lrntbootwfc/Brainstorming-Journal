@@ -1298,7 +1298,7 @@ export const MindGarden: React.FC<MindGardenProps> = ({
           </div>
         </div>
 
-        {/* Selected Element Detail Inspector OR Mind Garden Insights */}
+        {/* Selected Element Detail Inspector OR Mind Tree Insights */}
         <div className="pt-2 border-t" style={{ borderColor: themeConfig.border }}>
           {selectedElement ? (
             <div className="space-y-3">

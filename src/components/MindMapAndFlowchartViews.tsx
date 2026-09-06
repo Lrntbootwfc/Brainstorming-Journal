@@ -18,6 +18,10 @@ import {
   Clock,
   CheckCircle,
   Circle,
+  Square,
+  Hexagon,
+  Diamond,
+  Shapes,
   Plus,
   Trash2,
   X,
@@ -26,7 +30,9 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  BookOpen
+  BookOpen,
+  Edit3,
+  Save
 } from 'lucide-react';
 
 interface MindMapViewProps {
@@ -36,7 +42,107 @@ interface MindMapViewProps {
   themeConfig: any;
   onSelectNode: (node: IdeaNode) => void;
   onOpenEditor: (id: string) => void;
+  userName?: string;
 }
+
+export type MindMapShapeType = 'circle' | 'rect' | 'hexagon' | 'pill' | 'diamond';
+
+// Dynamic SVG Geometric Shape Renderer
+const MindMapSvgShape: React.FC<{
+  shape: MindMapShapeType;
+  cx: number;
+  cy: number;
+  r: number;
+  fill: string;
+  stroke: string;
+  strokeWidth: number | string;
+  filter?: string;
+  className?: string;
+}> = ({ shape, cx, cy, r, fill, stroke, strokeWidth, filter, className }) => {
+  if (shape === 'rect') {
+    const w = r * 2.3;
+    const h = r * 1.5;
+    return (
+      <rect
+        x={cx - w / 2}
+        y={cy - h / 2}
+        width={w}
+        height={h}
+        rx={14}
+        ry={14}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        filter={filter}
+        className={className}
+      />
+    );
+  }
+  if (shape === 'pill') {
+    const w = r * 2.5;
+    const h = r * 1.35;
+    return (
+      <rect
+        x={cx - w / 2}
+        y={cy - h / 2}
+        width={w}
+        height={h}
+        rx={h / 2}
+        ry={h / 2}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        filter={filter}
+        className={className}
+      />
+    );
+  }
+  if (shape === 'hexagon') {
+    const pts = Array.from({ length: 6 })
+      .map((_, i) => {
+        const a = (i * Math.PI) / 3 - Math.PI / 6;
+        return `${cx + r * 1.18 * Math.cos(a)},${cy + r * 1.18 * Math.sin(a)}`;
+      })
+      .join(' ');
+    return (
+      <polygon
+        points={pts}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        filter={filter}
+        strokeLinejoin="round"
+        className={className}
+      />
+    );
+  }
+  if (shape === 'diamond') {
+    const pts = `${cx},${cy - r * 1.25} ${cx + r * 1.3},${cy} ${cx},${cy + r * 1.25} ${cx - r * 1.3},${cy}`;
+    return (
+      <polygon
+        points={pts}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        filter={filter}
+        strokeLinejoin="round"
+        className={className}
+      />
+    );
+  }
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={r}
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      filter={filter}
+      className={className}
+    />
+  );
+};
 
 export const MindMapView: React.FC<MindMapViewProps> = ({
   mindMap,
@@ -45,6 +151,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
   themeConfig,
   onSelectNode,
   onOpenEditor,
+  userName,
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -53,6 +160,9 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Global shape style preset ('mixed', 'rect', 'hexagon', 'pill', 'circle')
+  const [shapeStyle, setShapeStyle] = useState<'mixed' | 'rect' | 'hexagon' | 'pill' | 'circle'>('mixed');
 
   // Selected node for detailed overlay / modal
   const [activeInspector, setActiveInspector] = useState<{
@@ -63,7 +173,114 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
     type: 'central' | 'primary' | 'satellite';
     sourceEntryId?: string;
     color?: string;
+    shape?: MindMapShapeType;
   } | null>(null);
+
+  // User customized nodes map (stored locally so user edits persist across resyncs)
+  const [userCustomNodes, setUserCustomNodes] = useState<Record<string, { label?: string; summary?: string; isCustom?: boolean; category?: string; shape?: MindMapShapeType }>>(() => {
+    try {
+      const storageKey = `mindmap_custom_nodes_${userName || 'user'}`;
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Editing state inside activeInspector
+  const [isEditingNode, setIsEditingNode] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editSummary, setEditSummary] = useState('');
+  const [editShape, setEditShape] = useState<MindMapShapeType>('rect');
+  const [isAddingChild, setIsAddingChild] = useState(false);
+  const [newChildTitle, setNewChildTitle] = useState('');
+  const [newChildCategory, setNewChildCategory] = useState('Brainstorm');
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [quickAddText, setQuickAddText] = useState('');
+
+  const handleStartEdit = (node: { id: string; title: string; summary?: string; shape?: MindMapShapeType }) => {
+    setEditTitle(node.title);
+    setEditSummary(node.summary || '');
+    setEditShape(node.shape || 'rect');
+    setIsEditingNode(true);
+  };
+
+  const handleSaveNodeEdit = (nodeId: string) => {
+    const updated = {
+      ...userCustomNodes,
+      [nodeId]: {
+        ...(userCustomNodes[nodeId] || {}),
+        label: editTitle.trim() || 'Untitled Idea',
+        summary: editSummary.trim(),
+        shape: editShape,
+        isCustom: true,
+      }
+    };
+    setUserCustomNodes(updated);
+    try {
+      const storageKey = `mindmap_custom_nodes_${userName || 'user'}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setIsEditingNode(false);
+    if (activeInspector && activeInspector.id === nodeId) {
+      setActiveInspector({
+        ...activeInspector,
+        title: editTitle.trim() || activeInspector.title,
+        summary: editSummary.trim(),
+        shape: editShape,
+      });
+    }
+  };
+
+  const handleAddChildNode = (hubCategory: string, hubIdx: number) => {
+    if (!newChildTitle.trim()) return;
+    const newId = `custom_idea_${Date.now()}`;
+    const updated = {
+      ...userCustomNodes,
+      [newId]: {
+        label: newChildTitle.trim(),
+        summary: `Reflected in ${hubCategory}`,
+        isCustom: true,
+        category: hubCategory,
+        shape: 'pill' as MindMapShapeType,
+      }
+    };
+    setUserCustomNodes(updated);
+    try {
+      const storageKey = `mindmap_custom_nodes_${userName || 'user'}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setNewChildTitle('');
+    setIsAddingChild(false);
+  };
+
+  const handleQuickAddIdea = () => {
+    if (!quickAddText.trim()) return;
+    const newId = `custom_idea_${Date.now()}`;
+    const updated = {
+      ...userCustomNodes,
+      [newId]: {
+        label: quickAddText.trim(),
+        summary: `Added to ${newChildCategory}`,
+        isCustom: true,
+        category: newChildCategory,
+        shape: 'pill' as MindMapShapeType,
+      }
+    };
+    setUserCustomNodes(updated);
+    try {
+      const storageKey = `mindmap_custom_nodes_${userName || 'user'}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setQuickAddText('');
+    setIsQuickAddOpen(false);
+  };
 
   // Derive theme-harmonized color palettes for the branches
   const branchPalette = useMemo(() => {
@@ -74,7 +291,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
         mainEnd: '#ea580c',
         satStart: '#fdba74',
         satEnd: '#f97316',
-        label: 'IDEA 1',
+        label: 'BRAINSTORM',
         stroke: '#ffffff',
       },
       {
@@ -83,7 +300,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
         mainEnd: '#0284c7',
         satStart: '#7dd3fc',
         satEnd: '#0ea5e9',
-        label: 'IDEA 2',
+        label: 'DISCOVERY',
         stroke: '#ffffff',
       },
       {
@@ -92,7 +309,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
         mainEnd: '#65a30d',
         satStart: '#bef264',
         satEnd: '#84cc16',
-        label: 'IDEA 3',
+        label: 'GROWTH',
         stroke: '#ffffff',
       },
       {
@@ -101,7 +318,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
         mainEnd: '#c026d3',
         satStart: '#fbcfe8',
         satEnd: '#db2777',
-        label: 'IDEA 4',
+        label: 'PROJECTS',
         stroke: '#ffffff',
       },
     ];
@@ -115,225 +332,163 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
     };
   }, [themeConfig]);
 
-  // Build the 4-hub infographic mind map model
+  // Build the dynamic mind map model driven by user data, custom nodes, and scalable geometry
   const mindMapModel = useMemo(() => {
-    const totalItems = nodes.length > 0 ? nodes.length : sessions.length;
-    const centralLabel = "MIND MAP";
+    const userDisplayName = userName || 'User';
+    const centralLabel = `${userDisplayName}'s Thoughts`;
+    const totalItems = (nodes.length > 0 ? nodes.length : sessions.length) + Object.keys(userCustomNodes).length;
     const centralSub = totalItems > 0 ? `${totalItems} Reflections Connected` : "Knowledge Web";
 
-    // Group items into 4 clusters/themes
+    // Dynamic categories based on sessions / nodes
+    const sessionCategories = Array.from(new Set(sessions.map((s) => s.category).filter(Boolean)));
+    const nodeClusters = Array.from(new Set(nodes.map((n) => n.cluster || n.category).filter(Boolean)));
+    const pool = [...new Set([...sessionCategories, ...nodeClusters])];
+
+    const categoryNames = [
+      pool[0] || 'Brainstorm',
+      pool[1] || 'Reflections',
+      pool[2] || 'Projects',
+      pool[3] || 'Insights'
+    ];
+
+    // Group items into 4 thematic clusters
     const groups: {
       category: string;
       items: { id: string; title: string; summary: string; entryId?: string }[];
-    }[] = [
-      { category: 'Key Themes', items: [] },
-      { category: 'Explorations', items: [] },
-      { category: 'Insights', items: [] },
-      { category: 'Breakthroughs', items: [] },
-    ];
+    }[] = categoryNames.map((cat) => ({
+      category: cat.toUpperCase(),
+      items: [],
+    }));
 
+    // Ingest nodes
     if (nodes.length > 0) {
-      const clusters = Array.from(new Set(nodes.map((n) => n.cluster || n.category || 'General')));
       nodes.forEach((node, idx) => {
         const groupIdx = idx % 4;
+        const custom = userCustomNodes[node.id];
         groups[groupIdx].items.push({
           id: node.id,
-          title: node.title,
-          summary: node.summary || (node.keyInsights && node.keyInsights[0]) || '',
+          title: custom?.label || node.title,
+          summary: custom?.summary || node.summary || (node.keyInsights && node.keyInsights[0]) || '',
           entryId: node.id,
         });
-        if (clusters[groupIdx] && groups[groupIdx].category === 'Key Themes' && groupIdx === 0) {
-          groups[0].category = clusters[0].toUpperCase();
-        } else if (clusters[groupIdx]) {
-          groups[groupIdx].category = clusters[groupIdx].toUpperCase();
-        }
       });
     } else if (sessions.length > 0) {
       sessions.forEach((s, idx) => {
-        const groupIdx = idx % 4;
+        // Find matching group or modulo
+        let groupIdx = groups.findIndex((g) => g.category.toLowerCase() === (s.category || '').toLowerCase());
+        if (groupIdx === -1) groupIdx = idx % 4;
         const fallbackText = s.summary || (s.messages && s.messages[0]?.content) || s.title || '';
+        const custom = userCustomNodes[s.id];
         groups[groupIdx].items.push({
           id: s.id,
-          title: s.title,
-          summary: fallbackText.slice(0, 90) + (fallbackText.length > 90 ? '...' : ''),
+          title: custom?.label || s.title,
+          summary: custom?.summary || (fallbackText.slice(0, 90) + (fallbackText.length > 90 ? '...' : '')),
           entryId: s.id,
         });
-        if (s.category && groups[groupIdx].items.length === 1) {
-          groups[groupIdx].category = s.category.toUpperCase();
-        }
       });
     }
 
-    // Exact infographic geometry matching the circular diagram in reference image:
-    // Center: (600, 375)
-    // 4 Primary Hubs positioned radially in 4 quadrants:
-    const hubs = [
-      // IDEA 1 (Top Left)
-      {
-        id: 'primary-idea-1',
-        label: 'IDEA 1',
-        category: groups[0].category || 'CONCEPTS',
-        x: 320,
-        y: 200,
-        r: 68,
-        palette: branchPalette[0],
-        satellites: [
-          {
-            id: 'sat-1-1',
-            x: 140,
-            y: 140,
-            r: 42,
-            label: groups[0].items[0]?.title || 'Core Idea',
-            summary: groups[0].items[0]?.summary || 'Primary focal thesis',
-            entryId: groups[0].items[0]?.entryId,
-          },
-          {
-            id: 'sat-1-2',
-            x: 480,
-            y: 155,
-            r: 50,
-            label: groups[0].items[1]?.title || 'Evolution',
-            summary: groups[0].items[1]?.summary || 'Secondary progression',
-            entryId: groups[0].items[1]?.entryId,
-          },
-          {
-            id: 'sat-1-3',
-            x: 195,
-            y: 345,
-            r: 34,
-            label: groups[0].items[2]?.title || 'Action',
-            summary: groups[0].items[2]?.summary || 'Immediate takeaway',
-            entryId: groups[0].items[2]?.entryId,
-          },
-        ],
-      },
-      // IDEA 2 (Top Right)
-      {
-        id: 'primary-idea-2',
-        label: 'IDEA 2',
-        category: groups[1].category || 'DISCOVERY',
-        x: 880,
-        y: 215,
-        r: 70,
-        palette: branchPalette[1],
-        satellites: [
-          {
-            id: 'sat-2-1',
-            x: 710,
-            y: 125,
-            r: 46,
-            label: groups[1].items[0]?.title || 'Method',
-            summary: groups[1].items[0]?.summary || 'Systematic approach',
-            entryId: groups[1].items[0]?.entryId,
-          },
-          {
-            id: 'sat-2-2',
-            x: 1060,
-            y: 175,
-            r: 36,
-            label: groups[1].items[1]?.title || 'Angle',
-            summary: groups[1].items[1]?.summary || 'Lateral perspective',
-            entryId: groups[1].items[1]?.entryId,
-          },
-          {
-            id: 'sat-2-3',
-            x: 1000,
-            y: 380,
-            r: 48,
-            label: groups[1].items[2]?.title || 'Impact',
-            summary: groups[1].items[2]?.summary || 'Measurable outcome',
-            entryId: groups[1].items[2]?.entryId,
-          },
-          {
-            id: 'sat-2-4',
-            x: 735,
-            y: 300,
-            r: 32,
-            label: groups[1].items[3]?.title || 'Context',
-            summary: groups[1].items[3]?.summary || 'Background environment',
-            entryId: groups[1].items[3]?.entryId,
-          },
-        ],
-      },
-      // IDEA 3 (Bottom Left)
-      {
-        id: 'primary-idea-3',
-        label: 'IDEA 3',
-        category: groups[2].category || 'GROWTH',
-        x: 310,
-        y: 565,
-        r: 68,
-        palette: branchPalette[2],
-        satellites: [
-          {
-            id: 'sat-3-1',
-            x: 145,
-            y: 545,
-            r: 44,
-            label: groups[2].items[0]?.title || 'Pattern',
-            summary: groups[2].items[0]?.summary || 'Recurring behavior',
-            entryId: groups[2].items[0]?.entryId,
-          },
-          {
-            id: 'sat-3-2',
-            x: 445,
-            y: 670,
-            r: 40,
-            label: groups[2].items[1]?.title || 'Strategy',
-            summary: groups[2].items[1]?.summary || 'Forward direction',
-            entryId: groups[2].items[1]?.entryId,
-          },
-          {
-            id: 'sat-3-3',
-            x: 325,
-            y: 440,
-            r: 28,
-            label: groups[2].items[2]?.title || 'Next Step',
-            summary: groups[2].items[2]?.summary || 'Concrete application',
-            entryId: groups[2].items[2]?.entryId,
-          },
-        ],
-      },
-      // IDEA 4 (Bottom Right)
-      {
-        id: 'primary-idea-4',
-        label: 'IDEA 4',
-        category: groups[3].category || 'RESULTS',
-        x: 870,
-        y: 555,
-        r: 68,
-        palette: branchPalette[3],
-        satellites: [
-          {
-            id: 'sat-4-1',
-            x: 1045,
-            y: 530,
-            r: 40,
-            label: groups[3].items[0]?.title || 'Clarity',
-            summary: groups[3].items[0]?.summary || 'Cognitive breakthrough',
-            entryId: groups[3].items[0]?.entryId,
-          },
-          {
-            id: 'sat-4-2',
-            x: 730,
-            y: 675,
-            r: 36,
-            label: groups[3].items[1]?.title || 'Synthesis',
-            summary: groups[3].items[1]?.summary || 'Harmonized takeaway',
-            entryId: groups[3].items[1]?.entryId,
-          },
-          {
-            id: 'sat-4-3',
-            x: 980,
-            y: 675,
-            r: 46,
-            label: groups[3].items[2]?.title || 'Vision',
-            summary: groups[3].items[2]?.summary || 'Long-term direction',
-            entryId: groups[3].items[2]?.entryId,
-          },
-        ],
-      },
+    // Ingest any manually added custom nodes
+    Object.entries(userCustomNodes).forEach(([id, custom]) => {
+      if (custom.isCustom && id.startsWith('custom_idea_')) {
+        let groupIdx = groups.findIndex((g) => g.category === custom.category);
+        if (groupIdx === -1) groupIdx = 0;
+        // Avoid duplicate
+        if (!groups[groupIdx].items.some((it) => it.id === id)) {
+          groups[groupIdx].items.push({
+            id,
+            title: custom.label || 'Custom Idea',
+            summary: custom.summary || '',
+          });
+        }
+      }
+    });
+
+    // Provide default fallback items if user has fresh empty journal
+    groups.forEach((g, gIdx) => {
+      if (g.items.length === 0) {
+        const defaultIdeas = [
+          ['Creative Vision', 'Deep Focus'],
+          ['Daily Observations', 'Key Learnings'],
+          ['Action Priorities', 'Habit Systems'],
+          ['Synthesized Insights', 'Future Milestones'],
+        ];
+        (defaultIdeas[gIdx] || ['Concept A', 'Concept B']).forEach((title, iIdx) => {
+          const fakeId = `default_${gIdx}_${iIdx}`;
+          const custom = userCustomNodes[fakeId];
+          g.items.push({
+            id: fakeId,
+            title: custom?.label || title,
+            summary: custom?.summary || `Connective thought in ${g.category}`,
+          });
+        });
+      }
+    });
+
+    // Positions for 4 Hubs in 4 Quadrants:
+    // Center is (600, 375)
+    const hubCoords = [
+      { x: 320, y: 200 }, // Top-Left
+      { x: 880, y: 200 }, // Top-Right
+      { x: 320, y: 550 }, // Bottom-Left
+      { x: 880, y: 550 }, // Bottom-Right
     ];
+
+    const baseAngles = [
+      Math.PI * 1.15, // Top-Left points outward/upward-left
+      -Math.PI * 0.15, // Top-Right points outward/upward-right
+      Math.PI * 0.85,  // Bottom-Left points outward/downward-left
+      Math.PI * 0.15,  // Bottom-Right points outward/downward-right
+    ];
+
+    const hubs = groups.map((g, hubIdx) => {
+      const coord = hubCoords[hubIdx];
+      const customHub = userCustomNodes[`hub_${hubIdx}`];
+      const hubLabel = customHub?.label || g.category;
+      const palette = branchPalette[hubIdx];
+
+      // Dynamically lay out satellites around this hub:
+      // More items = more satellite nodes branching out!
+      const totalSat = g.items.length;
+      const angleSpread = Math.min(Math.PI * 0.85, Math.max(0.6, 0.45 * (totalSat - 1)));
+      const baseAngle = baseAngles[hubIdx];
+
+      const satellites = g.items.map((item, satIdx) => {
+        const step = totalSat > 1 ? (satIdx - (totalSat - 1) / 2) * (angleSpread / (totalSat - 1)) : 0;
+        const angle = baseAngle + step;
+        const orbitDist = 135 + (satIdx % 2) * 40;
+        const satX = Math.round(coord.x + Math.cos(angle) * orbitDist);
+        const satY = Math.round(coord.y + Math.sin(angle) * orbitDist);
+        const satRadius = Math.max(34, Math.min(52, 48 - totalSat * 1.5));
+        const custom = userCustomNodes[item.id];
+        const shape: MindMapShapeType = custom?.shape || (shapeStyle === 'mixed' ? (satIdx % 2 === 0 ? 'rect' : 'pill') : shapeStyle);
+
+        return {
+          id: item.id,
+          x: satX,
+          y: satY,
+          r: satRadius,
+          label: item.title,
+          summary: item.summary,
+          entryId: item.entryId,
+          shape,
+        };
+      });
+
+      const hubShape: MindMapShapeType = customHub?.shape || (shapeStyle === 'mixed' ? 'hexagon' : shapeStyle);
+
+      return {
+        id: `hub-${hubIdx}`,
+        label: hubLabel,
+        category: g.category,
+        x: coord.x,
+        y: coord.y,
+        r: 68,
+        palette,
+        shape: hubShape,
+        satellites,
+      };
+    });
 
     return {
       central: {
@@ -342,10 +497,11 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
         r: 88,
         label: centralLabel,
         sub: centralSub,
+        shape: (shapeStyle === 'mixed' ? 'hexagon' : shapeStyle) as MindMapShapeType,
       },
       hubs,
     };
-  }, [nodes, sessions, branchPalette]);
+  }, [nodes, sessions, branchPalette, userName, userCustomNodes, shapeStyle]);
 
   // Background Constellation Mesh (matching the subtle network mesh in the image)
   const constellationMesh = useMemo(() => {
@@ -415,9 +571,9 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
       onMouseLeave={handleMouseUp}
     >
       {/* Top Floating Control Bar */}
-      <div className="absolute top-4 left-6 z-20 flex items-center gap-2">
+      <div className="absolute top-4 left-6 z-20 flex flex-wrap items-center gap-2">
         <div 
-          className="px-3.5 py-1.5 rounded-full border shadow-xs text-xs font-semibold flex items-center gap-2"
+          className="px-3 py-1.5 rounded-full border shadow-xs text-xs font-semibold flex items-center gap-2"
           style={{
             backgroundColor: themeConfig.paperCardBg,
             borderColor: themeConfig.border,
@@ -425,8 +581,47 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
           }}
         >
           <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: themeConfig.primary }} />
-          <span>Interactive Mind Map</span>
+          <span>Mind Map</span>
         </div>
+
+        {/* Global Shape Style Toggle */}
+        <div 
+          className="p-1 rounded-full border shadow-xs text-xs flex items-center gap-1"
+          style={{
+            backgroundColor: themeConfig.paperCardBg,
+            borderColor: themeConfig.border,
+            color: themeConfig.inkColor
+          }}
+        >
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 opacity-60 flex items-center gap-1">
+            <Shapes className="h-3 w-3" /> Shapes:
+          </span>
+          {(['mixed', 'hexagon', 'rect', 'pill', 'circle'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setShapeStyle(mode)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all capitalize cursor-pointer ${
+                shapeStyle === mode ? 'text-white shadow-xs' : 'opacity-70 hover:opacity-100'
+              }`}
+              style={{
+                backgroundColor: shapeStyle === mode ? themeConfig.primary : 'transparent',
+              }}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+
+        {/* Quick Add Idea Button */}
+        <button
+          onClick={() => setIsQuickAddOpen(true)}
+          className="px-3 py-1.5 rounded-full border shadow-xs text-xs font-bold flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer text-white"
+          style={{ backgroundColor: themeConfig.primary, borderColor: themeConfig.primary }}
+          title="Add a new idea to mind map"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>+ Add Idea</span>
+        </button>
       </div>
 
       {/* Floating Zoom & Pan Controls */}
@@ -569,7 +764,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
             )}
           </g>
 
-          {/* 3. Satellite Circles (Sub-Ideas / Reflections) */}
+          {/* 3. Satellite Nodes (Sub-Ideas / Reflections with dynamic shapes) */}
           <g>
             {mindMapModel.hubs.map((hub, hubIdx) =>
               hub.satellites.map((sat) => {
@@ -587,25 +782,27 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
                         type: 'satellite',
                         sourceEntryId: sat.entryId,
                         color: hub.palette.mainEnd,
+                        shape: sat.shape,
                       });
                       const matchingNode = nodes.find((n) => n.id === sat.entryId);
                       if (matchingNode) onSelectNode(matchingNode);
                     }}
                     className="cursor-pointer transition-transform duration-200 hover:scale-105"
                   >
-                    {/* Shadow & Circular Disk */}
-                    <circle
+                    {/* Dynamic Geometric Shape */}
+                    <MindMapSvgShape
+                      shape={sat.shape}
                       cx={sat.x}
                       cy={sat.y}
                       r={sat.r}
                       fill={`url(#grad-sat-${hubIdx})`}
                       stroke={isSelected ? '#fef08a' : '#ffffff'}
-                      strokeWidth={isSelected ? '4' : '3'}
+                      strokeWidth={isSelected ? '4' : '2.5'}
                       filter="url(#small-disk-shadow)"
                       className="transition-all"
                     />
 
-                    {/* Short Text inside Satellite Circle */}
+                    {/* Short Text inside Satellite */}
                     <text
                       x={sat.x}
                       y={sat.y + 4}
@@ -624,7 +821,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
             )}
           </g>
 
-          {/* 4. Primary Idea Hub Circles ("IDEA 1", "IDEA 2", "IDEA 3", "IDEA 4") */}
+          {/* 4. Primary Idea Hubs ("IDEA 1", "IDEA 2", "IDEA 3", "IDEA 4" with dynamic shapes) */}
           <g>
             {mindMapModel.hubs.map((hub, hubIdx) => {
               const isSelected = activeInspector?.id === hub.id;
@@ -640,29 +837,31 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
                       summary: `Explore cluster: ${hub.satellites.length} interconnected idea nodes and reflections.`,
                       type: 'primary',
                       color: hub.palette.mainEnd,
+                      shape: hub.shape,
                     });
                   }}
                   className="cursor-pointer transition-transform duration-200 hover:scale-105"
                 >
-                  {/* Outer Elevated Circle */}
-                  <circle
+                  {/* Outer Elevated Shape */}
+                  <MindMapSvgShape
+                    shape={hub.shape}
                     cx={hub.x}
                     cy={hub.y}
                     r={hub.r}
                     fill={`url(#grad-hub-${hubIdx})`}
                     stroke={isSelected ? '#fef08a' : '#ffffff'}
-                    strokeWidth={isSelected ? '5' : '4'}
+                    strokeWidth={isSelected ? '5' : '3.5'}
                     filter="url(#disk-shadow)"
                     className="transition-all"
                   />
 
-                  {/* Primary Label (e.g. "IDEA 1") */}
+                  {/* Primary Label */}
                   <text
                     x={hub.x}
                     y={hub.y - 4}
                     textAnchor="middle"
                     fill="#ffffff"
-                    fontSize="18"
+                    fontSize="17"
                     fontWeight="900"
                     className="pointer-events-none drop-shadow-sm font-sans"
                     style={{ letterSpacing: '1px' }}
@@ -688,7 +887,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
             })}
           </g>
 
-          {/* 5. Central Hub Node ("MIND MAP") */}
+          {/* 5. Central Hub Node ("MIND MAP" / User Thoughts) */}
           <g
             onClick={(e) => {
               e.stopPropagation();
@@ -699,12 +898,14 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
                 summary: mindMapModel.central.sub,
                 type: 'central',
                 color: centerColor.end,
+                shape: mindMapModel.central.shape,
               });
             }}
             className="cursor-pointer transition-transform duration-200 hover:scale-105"
           >
-            {/* Center Circle */}
-            <circle
+            {/* Center Shape */}
+            <MindMapSvgShape
+              shape={mindMapModel.central.shape}
               cx={mindMapModel.central.x}
               cy={mindMapModel.central.y}
               r={mindMapModel.central.r}
@@ -720,7 +921,7 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
               y={mindMapModel.central.y + 2}
               textAnchor="middle"
               fill="#ffffff"
-              fontSize="23"
+              fontSize="21"
               fontWeight="900"
               className="pointer-events-none drop-shadow-md font-sans"
               style={{ letterSpacing: '1.5px' }}
@@ -777,16 +978,156 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
             {activeInspector.title}
           </h4>
 
-          {activeInspector.summary && (
-            <p className="text-xs opacity-75 leading-relaxed mb-4 line-clamp-3">
-              {activeInspector.summary}
-            </p>
+          {isEditingNode ? (
+            <div className="space-y-2 mb-3">
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60 mb-0.5 block">Title / Idea Label</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-lg border focus:outline-none"
+                  style={{
+                    backgroundColor: themeConfig.paperBg,
+                    borderColor: themeConfig.border,
+                    color: themeConfig.inkColor,
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60 mb-0.5 block">Summary / Context</label>
+                <textarea
+                  rows={3}
+                  value={editSummary}
+                  onChange={(e) => setEditSummary(e.target.value)}
+                  className="w-full text-xs px-2.5 py-1.5 rounded-lg border focus:outline-none resize-none"
+                  style={{
+                    backgroundColor: themeConfig.paperBg,
+                    borderColor: themeConfig.border,
+                    color: themeConfig.inkColor,
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60 mb-1 block">Node Shape</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(
+                    [
+                      { id: 'rect', label: 'Card' },
+                      { id: 'hexagon', label: 'Hex' },
+                      { id: 'pill', label: 'Pill' },
+                      { id: 'diamond', label: 'Diamond' },
+                      { id: 'circle', label: 'Circle' },
+                    ] as const
+                  ).map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setEditShape(s.id)}
+                      className={`px-2 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                        editShape === s.id ? 'text-white' : 'opacity-70 hover:opacity-100'
+                      }`}
+                      style={{
+                        backgroundColor: editShape === s.id ? themeConfig.primary : 'transparent',
+                        borderColor: themeConfig.border,
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => handleSaveNodeEdit(activeInspector.id)}
+                  className="flex-1 py-1.5 px-3 rounded-lg text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                  style={{ backgroundColor: themeConfig.primary }}
+                >
+                  <Save className="h-3 w-3" />
+                  <span>Save Node</span>
+                </button>
+                <button
+                  onClick={() => setIsEditingNode(false)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer opacity-70 hover:opacity-100"
+                  style={{ borderColor: themeConfig.border }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {activeInspector.summary && (
+                <p className="text-xs opacity-75 leading-relaxed mb-3 line-clamp-3">
+                  {activeInspector.summary}
+                </p>
+              )}
+
+              <div className="flex items-center gap-2 mb-3">
+                <button
+                  onClick={() => handleStartEdit(activeInspector)}
+                  className="flex-1 py-1.5 px-2.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all opacity-80 hover:opacity-100 cursor-pointer"
+                  style={{
+                    backgroundColor: themeConfig.chipBg,
+                    borderColor: themeConfig.border,
+                    color: themeConfig.inkColor,
+                  }}
+                >
+                  <Edit3 className="h-3 w-3" />
+                  <span>Edit Node</span>
+                </button>
+
+                {activeInspector.type !== 'central' && (
+                  <button
+                    onClick={() => setIsAddingChild(true)}
+                    className="flex-1 py-1.5 px-2.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all opacity-80 hover:opacity-100 cursor-pointer"
+                    style={{
+                      backgroundColor: themeConfig.chipBg,
+                      borderColor: themeConfig.border,
+                      color: themeConfig.inkColor,
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>+ New Idea</span>
+                  </button>
+                )}
+              </div>
+
+              {isAddingChild && (
+                <div className="p-2.5 rounded-xl border mb-3 space-y-2 animate-in fade-in" style={{ borderColor: themeConfig.border, backgroundColor: themeConfig.chipBg }}>
+                  <p className="text-[10px] font-bold uppercase opacity-70">Add Idea to {activeInspector.category || 'Cluster'}</p>
+                  <input
+                    type="text"
+                    placeholder="New thought or context..."
+                    value={newChildTitle}
+                    onChange={(e) => setNewChildTitle(e.target.value)}
+                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border focus:outline-none"
+                    style={{ backgroundColor: themeConfig.paperBg, borderColor: themeConfig.border, color: themeConfig.inkColor }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAddChildNode(activeInspector.category || 'IDEAS', 0)}
+                      className="flex-1 py-1 px-2.5 rounded-lg text-white text-xs font-semibold cursor-pointer"
+                      style={{ backgroundColor: themeConfig.primary }}
+                    >
+                      Add Node
+                    </button>
+                    <button
+                      onClick={() => { setIsAddingChild(false); setNewChildTitle(''); }}
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer opacity-70"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {activeInspector.sourceEntryId && (
             <button
               onClick={() => onOpenEditor(activeInspector.sourceEntryId!)}
-              className="w-full py-2 px-3 rounded-xl text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs hover:opacity-90 transition-all cursor-pointer"
+              className="w-full py-2 px-3 rounded-xl text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs hover:opacity-90 transition-all cursor-pointer mt-1"
               style={{ backgroundColor: themeConfig.primary }}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -794,6 +1135,102 @@ export const MindMapView: React.FC<MindMapViewProps> = ({
               <ExternalLink className="h-3 w-3 ml-1 opacity-70" />
             </button>
           )}
+        </div>
+      )}
+
+      {/* Quick Add Idea Modal */}
+      {isQuickAddOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in">
+          <div 
+            className="max-w-md w-full p-6 rounded-2xl border shadow-2xl space-y-4"
+            style={{
+              backgroundColor: themeConfig.paperCardBg,
+              borderColor: themeConfig.border,
+              color: themeConfig.inkColor,
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg text-white" style={{ backgroundColor: themeConfig.primary }}>
+                  <Plus className="h-4 w-4" />
+                </span>
+                <h3 className="font-bold text-sm">Add Idea Node to Mind Map</h3>
+              </div>
+              <button
+                onClick={() => setIsQuickAddOpen(false)}
+                className="h-7 w-7 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-[11px] uppercase font-bold opacity-70 mb-1 block">Idea / Context Thought</label>
+              <input
+                type="text"
+                placeholder="e.g., Explore microservices architecture, Morning reflections..."
+                value={quickAddText}
+                onChange={(e) => setQuickAddText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleQuickAddIdea();
+                }}
+                autoFocus
+                className="w-full text-xs font-medium px-3 py-2 rounded-xl border focus:outline-none"
+                style={{
+                  backgroundColor: themeConfig.paperBg,
+                  borderColor: themeConfig.border,
+                  color: themeConfig.inkColor,
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] uppercase font-bold opacity-70 mb-1 block">Connect to Branch / Quadrant</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { name: 'Brainstorm', desc: 'Top-Left Quadrant' },
+                  { name: 'Reflections', desc: 'Top-Right Quadrant' },
+                  { name: 'Action Items', desc: 'Bottom-Left Quadrant' },
+                  { name: 'Synthesized Insights', desc: 'Bottom-Right Quadrant' },
+                ].map((c) => (
+                  <button
+                    key={c.name}
+                    type="button"
+                    onClick={() => setNewChildCategory(c.name)}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      newChildCategory === c.name ? 'ring-2' : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{
+                      borderColor: themeConfig.border,
+                      backgroundColor: newChildCategory === c.name ? themeConfig.chipBg : 'transparent',
+                    }}
+                  >
+                    <p className="text-xs font-bold">{c.name}</p>
+                    <p className="text-[10px] opacity-60">{c.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleQuickAddIdea}
+                disabled={!quickAddText.trim()}
+                className="flex-1 py-2 px-4 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                style={{ backgroundColor: themeConfig.primary }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Node to Mind Map</span>
+              </button>
+              <button
+                onClick={() => setIsQuickAddOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer opacity-70 hover:opacity-100"
+                style={{ borderColor: themeConfig.border }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

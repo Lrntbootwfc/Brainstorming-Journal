@@ -92,6 +92,7 @@ export interface JournalSession {
   imageUrl?: string;
   isStarred?: boolean;
   withoutAI?: boolean; // When true, writer uses distraction-free journaling without live conversational turns; AI summary generated on save
+  includeInAIHistory?: boolean; // Whether entry without AI should be included in AI history/summary context
   folderId?: string; // Optional custom folder ID
   
   // Expanded specialized tracking fields
@@ -356,6 +357,7 @@ export interface CustomFolder {
   icon?: string; // Lucide icon identifier
   description?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface SuggestedGoalFromJournal {

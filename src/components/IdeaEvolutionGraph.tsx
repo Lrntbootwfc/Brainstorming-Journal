@@ -42,6 +42,8 @@ interface IdeaEvolutionGraphProps {
   onOpenEditor: (sessionId: string) => void;
   onNewSessionWithPrompt?: (initialText: string, category: string) => void;
   onUpdateSession?: (sessionId: string, updates: Partial<JournalSession>) => void;
+  initialViewMode?: 'garden' | 'mindmap' | 'flowchart' | 'stories';
+  userName?: string;
 }
 
 export const IdeaEvolutionGraph: React.FC<IdeaEvolutionGraphProps> = ({
@@ -50,6 +52,8 @@ export const IdeaEvolutionGraph: React.FC<IdeaEvolutionGraphProps> = ({
   onOpenEditor,
   onNewSessionWithPrompt,
   onUpdateSession,
+  initialViewMode,
+  userName,
 }) => {
   const themeConfig = getThemeConfig(theme);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -60,7 +64,7 @@ export const IdeaEvolutionGraph: React.FC<IdeaEvolutionGraphProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<IdeaNode | null>(null);
   const [selectedStory, setSelectedStory] = useState<EvolutionStory | null>(null);
-  const [viewMode, setViewMode] = useState<'garden' | 'mindmap' | 'flowchart' | 'stories'>('garden');
+  const [viewMode, setViewMode] = useState<'garden' | 'mindmap' | 'flowchart' | 'stories'>(initialViewMode || 'garden');
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
@@ -586,7 +590,7 @@ export const IdeaEvolutionGraph: React.FC<IdeaEvolutionGraphProps> = ({
               style={viewMode === 'garden' ? { backgroundColor: themeConfig.primary } : {}}
             >
               <TreeDeciduous className="h-3.5 w-3.5" />
-              <span>Mind Garden</span>
+              <span>Mind Tree</span>
             </button>
 
             <button
@@ -688,6 +692,7 @@ export const IdeaEvolutionGraph: React.FC<IdeaEvolutionGraphProps> = ({
             nodes={graphData?.nodes || []} 
             sessions={sessions}
             themeConfig={themeConfig} 
+            userName={userName}
             onSelectNode={(node) => {
               setSelectedNode(node);
               setIsDrawerOpen(true);

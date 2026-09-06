@@ -372,10 +372,10 @@ export const ActionEngine: React.FC<ActionEngineProps> = ({
           <div>
             <h2 className="font-serif text-2xl font-bold flex items-center gap-2">
               <CheckCircle className="h-6 w-6" style={{ color: themeConfig.primary }} />
-              Thought ➔ Action Engine
+              Thought ➔ Action
             </h2>
             <p className="text-sm opacity-75 mt-1">
-              Actions extracted from reflections or added manually, with deadlines and prerequisite sequencing.
+              Actions extracted from reflections or added manually, with task dependencies and intelligent sequencing.
             </p>
           </div>
 

@@ -554,20 +554,55 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
                     id="editor-dark-mode-toggle"
                     onClick={onToggleDarkMode}
                     className="w-full flex items-center justify-center gap-1.5 p-1.5 rounded-full border transition-all hover:opacity-90 shadow-xs"
-                    style={{ backgroundColor: themeConfig.chipBg, borderColor: themeConfig.border, color: themeConfig.inkColor }}
+                    style={{ backgroundColor: themeConfig.chipBg, borderColor: themeConfig.border, color: themeConfig.primary }}
                   >
-                    {theme?.darkMode ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-indigo-500" />}
-                    <span className="text-xs font-semibold">{theme?.darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    {theme?.darkMode ? <Sun className="h-3.5 w-3.5" style={{ color: themeConfig.primary }} /> : <Moon className="h-3.5 w-3.5" style={{ color: themeConfig.primary }} />}
+                    <span className="text-xs font-semibold" style={{ color: themeConfig.inkColor }}>{theme?.darkMode ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
                 )}
 
                 {session.withoutAI && (
-                  <div
-                    className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full border justify-center"
-                    style={{ backgroundColor: themeConfig.chipBg, color: themeConfig.primary, borderColor: themeConfig.border }}
-                  >
-                    <Feather className="h-3 w-3" />
-                    <span>Quiet Mode (Without AI)</span>
+                  <div className="space-y-2">
+                    <div
+                      className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full border justify-center"
+                      style={{ backgroundColor: themeConfig.chipBg, color: themeConfig.primary, borderColor: themeConfig.border }}
+                    >
+                      <Feather className="h-3 w-3" />
+                      <span>Quiet Mode (Without AI)</span>
+                    </div>
+
+                    <div
+                      className="p-3 rounded-2xl border text-xs space-y-2 shadow-2xs text-left"
+                      style={{ backgroundColor: themeConfig.paperCardBg, borderColor: themeConfig.border }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-bold text-[11px]" style={{ color: themeConfig.inkColor }}>
+                            Add to AI History?
+                          </p>
+                          <p className="text-[10px] opacity-70 mt-0.5 leading-relaxed">
+                            {session.includeInAIHistory
+                              ? 'Enabled: Included in your AI history and summary context.'
+                              : 'Disabled: Private entry, excluded from AI history.'}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateSession({ includeInAIHistory: !session.includeInAIHistory })}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                            session.includeInAIHistory ? '' : 'bg-stone-300 dark:bg-stone-600'
+                          }`}
+                          style={session.includeInAIHistory ? { backgroundColor: themeConfig.primary } : undefined}
+                          title="Do you want this entry to be added to your AI history?"
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                              session.includeInAIHistory ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 

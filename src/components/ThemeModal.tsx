@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Check, Palette, Compass, Sparkles, Sun, Moon, Trees, Flame, Feather } from 'lucide-react';
 import { PaperThemePreference, JourneyThemePreset } from '../types';
 import { getThemeConfig } from '../utils/theme';
+import { GeminiIcon } from './GeminiIcon';
 
 interface ThemeModalProps {
   isOpen: boolean;
@@ -127,7 +128,11 @@ export const ThemeModal: React.FC<ThemeModalProps> = ({
               className="h-10 w-10 rounded-2xl flex items-center justify-center shadow-xs"
               style={{ backgroundColor: themeConfig.chipBg, color: themeConfig.primary }}
             >
-              <Compass className="h-5 w-5" />
+              <GeminiIcon 
+    className="h-5 w-5" 
+    color={themeConfig.primary} 
+    accentColor={themeConfig.accentColor} 
+  />
             </div>
             <div>
               <h2 className="font-serif text-xl font-bold text-slate-900">

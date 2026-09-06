@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Sparkles, 
   ShieldCheck, 
@@ -8,20 +8,33 @@ import {
   MapPin,
   Calendar,
   CloudSun,
-  Compass,
   Workflow,
   Feather,
   Lock,
-  Network,
-  TreeDeciduous,
   GitBranch,
   CheckCircle,
+  TreeDeciduous,
+  Target,
+  Folder,
   Lightbulb,
   BookOpen,
   Layers,
   HeartHandshake,
-  TrendingUp
+  TrendingUp,
+  Sun,
+  Moon,
+  Compass,
+  Activity,
+  Zap,
+  Clock,
+  Palette,
+  Check,
+  Settings
 } from 'lucide-react';
+import { GeminiIcon } from './GeminiIcon';
+import { PaperThemePreference } from '../types';
+import { ThemeConfig, getThemeConfig } from '../utils/theme';
+import { ThemeModal } from './ThemeModal';
 
 const heroImage = '/hero-landscape.jpg';
 
@@ -31,6 +44,10 @@ interface LandingPageProps {
   isLoading: boolean;
   user?: any;
   errorMessage?: string | null;
+  theme?: PaperThemePreference;
+  themeConfig?: ThemeConfig;
+  onUpdateTheme?: (theme: PaperThemePreference) => void;
+  
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -39,34 +56,114 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   isLoading,
   user,
   errorMessage,
+  theme,
+  themeConfig,
+  onUpdateTheme,
 }) => {
+  const defaultTheme: PaperThemePreference = {
+    darkMode: false,
+    themePreset: 'journey-teal',
+    paperTone: 'journey-clean',
+    ruling: 'blank',
+    inkStyle: 'teal'
+  };
+  
+  const activeTheme = theme || defaultTheme;
+  const activeThemeConfig = themeConfig || getThemeConfig(activeTheme);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-[#fbfcfb] text-slate-800 flex flex-col justify-between selection:bg-teal-100 selection:text-teal-900">
+    <>
+
+    <div className="min-h-screen flex flex-col justify-between transition-colors duration-200"
+      style={{
+        backgroundColor: activeThemeConfig.paperBg,
+        backgroundImage: activeTheme.darkMode 
+          ? 'radial-gradient(circle at 20% 0%, rgba(38, 166, 154, 0.06), transparent 50%), radial-gradient(circle at 80% 100%, rgba(0, 131, 143, 0.05), transparent 50%)'
+          : 'none',
+        color: activeThemeConfig.inkColor
+      }}
+    >
       {/* Top Navigation Bar */}
-      <header className="mx-auto w-full max-w-5xl flex items-center justify-between px-4 sm:px-8 py-5 border-b border-slate-100">
+      <header 
+        className="mx-auto w-full max-w-7xl flex items-center justify-between px-4 sm:px-8 py-5 border-b transition-colors"
+        style={{ borderColor: activeThemeConfig.border }}
+      >
+        {/* Brand: Gemini Icon matching Dashboard, title, and badge */}
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-teal-800 text-white flex items-center justify-center shadow-xs">
-            <Compass className="h-5 w-5 text-teal-100" />
+          <div 
+            className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl flex items-center justify-center shadow-xs border shrink-0 transition-colors"
+            style={{ 
+              backgroundColor: activeThemeConfig.chipBg, 
+              borderColor: activeThemeConfig.border 
+            }}
+          >
+            <GeminiIcon 
+              className="h-5 w-5 sm:h-6 sm:w-6" 
+              color={activeThemeConfig.primary} 
+              accentColor={activeThemeConfig.accentColor} 
+            />
           </div>
           <div>
-            <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-              Brainstorm Journal
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
-                AI Companion
-              </span>
+            <span 
+              className="font-serif text-lg sm:text-xl font-bold tracking-tight flex items-center gap-2"
+              style={{ color: activeThemeConfig.inkColor }}
+            >
+              Brainstorming Journal
             </span>
-            <span className="text-[11px] text-slate-500 block font-medium">
-              A contemplative space for your thoughts
+            <span 
+              className="text-[11px] block font-medium opacity-70"
+              style={{ color: activeThemeConfig.inkColor }}
+            >
+              Turning ideas into action and providing clear direction
             </span>
           </div>
         </div>
 
-        <div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Theme Mode Toggle matching Dashboard */}
+          {onUpdateTheme && (
+            <button
+              id="landing-theme-toggle-btn"
+              onClick={() => onUpdateTheme({ ...activeTheme, darkMode: !activeTheme.darkMode })}
+              className="p-2 sm:p-2.5 rounded-full border text-xs flex items-center justify-center transition-all shadow-2xs hover:opacity-90 cursor-pointer shrink-0"
+              style={{
+                backgroundColor: activeThemeConfig.chipBg,
+                borderColor: activeThemeConfig.border,
+                color: activeThemeConfig.primary,
+              }}
+              title={activeTheme.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label="Toggle Light and Dark Mode"
+            >
+              {activeTheme.darkMode ? (
+                <Sun className="h-4 w-4" style={{ color: activeThemeConfig.primary }} />
+              ) : (
+                <Moon className="h-4 w-4" style={{ color: activeThemeConfig.primary }} />
+              )}
+            </button>
+          )}
+
+          
+            <button
+              id="landing-settings-btn"
+              onClick={ () => setIsThemeModalOpen(true) }
+              className="p-2 sm:p-2.5 rounded-full border text-xs flex items-center justify-center transition-all shadow-2xs hover:opacity-90 cursor-pointer shrink-0"
+              style={{
+                backgroundColor: activeThemeConfig.chipBg,
+                borderColor: activeThemeConfig.border,
+                color: activeThemeConfig.primary,
+              }}
+              title="Settings & Themes"
+              aria-label="Open Settings"
+            >
+              <Settings className="h-4 w-4" style={{ color: activeThemeConfig.primary }} />
+            </button>
+          
           {user ? (
             <button
               id="landing-open-dashboard-btn"
               onClick={onStartJournal}
-              className="px-5 py-2 rounded-full bg-teal-800 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs hover:bg-teal-900 transition-all cursor-pointer transform hover:-translate-y-0.5"
+              className="px-5 py-2 rounded-full text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs hover:opacity-95 transition-all cursor-pointer transform hover:-translate-y-0.5"
+              style={{ backgroundColor: activeThemeConfig.primary }}
             >
               <span>Open Journal</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -76,7 +173,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               id="landing-signin-btn"
               onClick={onSignIn}
               disabled={isLoading}
-              className="px-5 py-2 rounded-full bg-white text-slate-800 border border-slate-300 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-2xs hover:bg-slate-50 hover:border-teal-400 transition-all cursor-pointer"
+              className="px-5 py-2 rounded-full border text-xs sm:text-sm font-bold flex items-center gap-2 shadow-2xs hover:opacity-95 transition-all cursor-pointer"
+              style={{
+                backgroundColor: activeThemeConfig.paperCardBg,
+                borderColor: activeThemeConfig.border,
+                color: activeThemeConfig.inkColor,
+              }}
             >
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.4l3.7 2.9C6.5 7.4 9 5 12 5z" />
@@ -91,9 +193,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </header>
 
       {/* Main Scrollable Body */}
-      <main className="mx-auto w-full max-w-5xl px-4 sm:px-8 py-4 space-y-12">
-        {/* 1. Hero Section with Scenic Landscape Image */}
-        <section className="relative rounded-3xl overflow-hidden border border-slate-200/90 shadow-lg min-h-[420px] sm:min-h-[480px] flex flex-col justify-end p-6 sm:p-12">
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-8 py-6 space-y-5">
+        {/* 1. Hero Section with Scenic Landscape Image & Direct Statement */}
+        <section className="relative rounded-3xl overflow-hidden border border-slate-200/90 shadow-lg min-h-[440px] sm:min-h-[500px] flex flex-col justify-end p-6 sm:p-12">
           {/* Scenic Background Image */}
           <img 
             src={heroImage} 
@@ -103,21 +205,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           />
 
           {/* Calming Vignette Gradient for Perfect Readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-black/20" />
 
-          {/* Minimal, Appropriate Words in the Hero */}
-          <div className="relative z-10 max-w-2xl text-left space-y-3">
+          {/* Hero Content: Direct declaration as the Brainstorming Journal */}
+          <div className="relative z-10 max-w-7xl text-left space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 px-3.5 py-1 text-xs font-semibold text-white shadow-xs">
               <Feather className="h-3.5 w-3.5 text-teal-300" />
-              <span>A sanctuary for your thoughts</span>
+              <span>Welcome to Brainstorming Journal</span>
             </div>
 
             <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
-              A quiet place for your thoughts.
+              Where raw ideas transform into action and purposeful direction.
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-200 max-w-lg font-normal leading-relaxed">
-              Reflect freely, untangle ideas, and watch your thoughts connect.
+            <p className="text-sm sm:text-base text-slate-200 max-w-7xl font-normal leading-relaxed text-justify">
+              Sabhi ideas shuruat mein bikhre hue aur adhure hote hain. Brainstorming Journal aapke vicharon ko ek shant, deep sochne wale companion ke saath aage badhata hai—jo na sirf aapko sunta hai, balki har ek idea ko realistic action steps mein badal kar aapko ek saaf direction provide karta hai.
             </p>
 
             {/* Primary Action Button inside Hero */}
@@ -149,251 +251,507 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               )}
 
               {errorMessage && (
-                <p className="text-xs text-rose-300 font-medium bg-rose-950/60 px-3 py-1 rounded-full border border-rose-800">
-                  {errorMessage}
-                </p>
+                <div className="flex flex-col items-center gap-2 max-w-md animate-in fade-in duration-300">
+                  <p className="text-xs text-rose-300 font-medium bg-rose-950/70 px-3.5 py-1.5 rounded-xl border border-rose-800 text-center text-justify">
+                    {errorMessage}
+                  </p>
+                  {errorMessage.toLowerCase().includes('popup') && (
+                    <button
+                      id="landing-retry-signin-btn"
+                      onClick={onSignIn}
+                      className="text-xs px-3 py-1 rounded-full bg-teal-600 hover:bg-teal-500 text-white font-semibold transition-colors cursor-pointer shadow-xs"
+                    >
+                      Click here to try again
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </section>
 
-        {/* 2. Core Idea of the Application & Hackathon Story */}
+        {/* 2. The Core Philosophy — Continuous Editorial Narrative */}
         <section className="space-y-6">
-          <div className="max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-800">
-              <Sparkles className="h-4 w-4 text-teal-600" />
-              <span>The Core Idea</span>
+          <div className="max-w-7xl space-y-3">
+            <div 
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+              style={{ color: activeThemeConfig.primary }}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>The Purpose & Vision</span>
             </div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-snug">
-              A personal journal that thinks, questions, and listens with you.
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight leading-snug">
+              A journal designed for thinkers, builders, and dreamers who refuse to let ideas fade away.
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Most digital journals are passive text editors or rigid filing cabinets where thoughts are typed and quickly forgotten. Brainstorming Journal transforms journaling into an active, contemplative dialogue. Powered by Gemini Socratic intelligence, it acts as a calm companion—asking thoughtful, probing questions, reflecting your inner wisdom back to you, and uncovering the deeper meaning beneath everyday thoughts.
+            <p className="text-sm sm:text-base opacity-80 leading-relaxed font-normal text-justify">
+              Most note-taking applications become digital graveyards: a chaotic pile of isolated sentences where brilliant moments get buried under tomorrow’s noise. <strong>Brainstorming Journal</strong> was built on a singular conviction: an idea is only as powerful as the direction it gives your life. By combining reflective human writing with Gemini intelligence, this journal actively participates in your thinking process—challenging assumptions, weaving connections between scattered moments, and crystallizing amorphous brainstorms into concrete, executable steps.
             </p>
-          </div>
-
-          {/* 3. What More We Are Offering (In Specific Order) */}
-          <div className="space-y-6 pt-2">
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-800">
-              <Layers className="h-4 w-4 text-teal-600" />
-              <span>What More We Are Offering</span>
-            </div>
-
-            {/* Feature Pair: Mind Tree & Mind Garden */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Mind Tree */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4 flex flex-col justify-between hover:border-teal-300 transition-colors">
-                <div className="space-y-3">
-                  <div className="h-10 w-10 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
-                    <GitBranch className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700 block">
-                      Connect the Dots
-                    </span>
-                    <h3 className="font-serif text-xl font-bold text-slate-900 mt-0.5">
-                      Mind Tree
-                    </h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    Your thoughts don't exist in isolation. Mind Tree connects related ideas from your journal and shows how one thought can lead to, evolve into, or branch into another.
-                  </p>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Powered by semantic graph intelligence, it surfaces recurring themes, evolutionary milestones, and conceptual bridges across days or months of writing.
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-teal-800">
-                  <span className="h-2 w-2 rounded-full bg-teal-500" />
-                  <span>Answers: &ldquo;How are my thoughts connected?&rdquo;</span>
-                </div>
-              </div>
-
-              {/* Mind Garden */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4 flex flex-col justify-between hover:border-emerald-300 transition-colors">
-                <div className="space-y-3">
-                  <div className="h-10 w-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                    <TreeDeciduous className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">
-                      The Living Mind Tree
-                    </span>
-                    <h3 className="font-serif text-xl font-bold text-slate-900 mt-0.5">
-                      Mind Garden
-                    </h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    Your entire thinking journey represented as One Living Tree. Root thoughts anchor foundational themes deep into subterranean soil; thoughts travel along the sprawling branches; emergent innovations and creative sparks bloom at the leaves; and results, breakthroughs, and key insights bear fruit as ripe apples.
-                  </p>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    The tree breathes with the changing seasons (Spring blossoms, Summer canopy, Autumn harvest, Winter solstice) responding to your journal&apos;s live atmospheric weather context.
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-emerald-800">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span>Answers: &ldquo;How has my thinking grown?&rdquo;</span>
-                </div>
-              </div>
-            </div>
-
-            {/* The Living Map Summary Callout */}
-            <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 border border-teal-200/80 shadow-2xs space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-900">
-                <TrendingUp className="h-4 w-4 text-teal-700" />
-                <span>The Living Cognitive Map</span>
-              </div>
-              <h4 className="font-serif text-lg sm:text-xl font-bold text-slate-900">
-                Connecting Thoughts + Showing Their Growth
-              </h4>
-              <p className="text-xs sm:text-sm text-slate-700 max-w-2xl leading-relaxed">
-                Together, <strong>Mind Tree</strong> (which connects related ideas) and <strong>Mind Garden</strong> (which reveals how those ideas mature over time) turn your journal into a living map of how your thoughts connect and develop over time.
-              </p>
-            </div>
-
-            {/* Additional progressive capabilities */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              {/* Thought to Action */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5 hover:border-teal-300 transition-colors">
-                <div className="h-9 w-9 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700">
-                  <CheckCircle className="h-4 w-4" />
-                </div>
-                <h4 className="font-serif text-base font-bold text-slate-900">
-                  Thought ➔ Action Engine (Strictly Optional)
-                </h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Reflections do not have to remain purely abstract. When you are ready, synthesize actionable milestones with automatic dependency sequencing and horizontal sub-steps. Thought-to-action remains strictly optional—your thoughts are valuable simply as thoughts.
-                </p>
-              </div>
-
-              {/* Sensory & Grounded Memory */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5 hover:border-teal-300 transition-colors">
-                <div className="h-9 w-9 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
-                  <CloudSun className="h-4 w-4" />
-                </div>
-                <h4 className="font-serif text-base font-bold text-slate-900">
-                  Tactile & Atmospheric Memory Grounding
-                </h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Every entry captures the tactile feeling of the moment: live atmospheric weather tags, location atlas pins, photo snapshots, customizable paper and ink textures (Cream, Parchment, Kraft, Moleskine), and owner-isolated cloud persistence.
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* 4. Curated Companion Features Grid */}
-        <section className="space-y-4 pt-2">
-          <div>
-            <h2 className="font-serif text-lg font-bold text-slate-900">
-              Thoughtful Companion Features
+        {/* 3. The Complete Flow: Everything Inside the Journal (Flowing Presentation, No Boxy Cards) */}
+        <section className="space-y-12 pt-4">
+          <div className="border-b pb-4" style={{ borderColor: activeThemeConfig.border }}>
+            <div 
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-2"
+              style={{ color: activeThemeConfig.primary }}
+            >
+              <Layers className="h-4 w-4" />
+              <span>Architectural Blueprint</span>
+            </div>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight">
+              The Living Flow: Everything Inside the Journal
             </h2>
-            <p className="text-xs text-slate-500">
-              Everything designed to support your daily journaling and creative contemplation.
+            <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-7xl text-justify">
+              A seamless, step-by-step journey from the initial spark of raw reflection to long-term intellectual growth and tangible milestones.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {/* Snapshots */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-start gap-2 hover:border-teal-300 transition-colors">
-              <div className="p-2 rounded-xl bg-teal-50 text-teal-700">
-                <Camera className="h-4 w-4" />
+          {/* Sequential Narrative Chapters */}
+          <div className="relative pl-6 sm:pl-10 space-y-5 border-l-2" style={{ borderColor: activeThemeConfig.border }}>
+
+            {/* Step 1: The First Spark & Deep Brainstorming Dialogue */}
+            <div className="relative group space-y-3">
+              {/* Timeline Marker Dot */}
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                01
               </div>
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Snapshots</span>
-                <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                  Visual memories with photo uploads
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Socratic Reflection
                 </span>
+                <span className="text-xs opacity-60">• Multi-turn dialogue</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Deep Brainstorming & Interactive Thought Partnership
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                When you write an entry in Brainstorming Journal, you aren't writing into an empty void. Powered by Gemini, the AI acts as a dedicated intellectual sounding board. Rather than dispensing unsolicited advice or generic summaries, it practices the Socratic method: asking probing questions, pointing out hidden nuances in your reasoning, highlighting unexamined assumptions, and reflecting your core thesis back to you with striking clarity.
+              </p>
+
+              <div 
+                className="p-4 rounded-2xl border text-xs leading-relaxed max-w-7xl space-y-1.5"
+                style={{ backgroundColor: activeThemeConfig.chipBg, borderColor: activeThemeConfig.border }}
+              >
+                <div className="font-bold flex items-center gap-1.5" style={{ color: activeThemeConfig.primary }}>
+                  <Feather className="h-3.5 w-3.5" />
+                  <span>Quiet Mode (Zero AI Interference)</span>
+                </div>
+                <p className="opacity-80 text-justify">
+                  Prefer pure solitude? With one click, engage Quiet Mode to write uninterrupted without any AI interaction or history inclusion, preserving the sanctuary of an old-school private diary.
+                </p>
               </div>
             </div>
 
-            {/* Weather */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-start gap-2 hover:border-amber-300 transition-colors">
-              <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
-                <CloudSun className="h-4 w-4" />
+            {/* Step 2: Thought to Action Engine */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                02
               </div>
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Weather</span>
-                <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                  Live atmosphere & temperature
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Actionable Execution
                 </span>
+                <span className="text-xs opacity-60">• Direction & Momentum</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                The Thought ➔ Action Engine (Turning Ideas into Clear Direction)
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Ideas remain harmless daydreams until they are broken down into actionable commitments. The journal features a specialized Thought-to-Action synthesis engine that extracts real-world milestones from your introspections. It organizes tasks chronologically, surfaces foundational dependencies, suggests realistic next horizons, and provides the clear direction needed to convert creative momentum into tangible progress.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-7xl pt-1">
+                <div 
+                  className="p-3.5 rounded-2xl border text-xs space-y-1"
+                  style={{ backgroundColor: activeThemeConfig.chipBg, borderColor: activeThemeConfig.border }}
+                >
+                  <div className="font-bold flex items-center gap-1.5" style={{ color: activeThemeConfig.primary }}>
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    <span>Dependency Sequencing</span>
+                  </div>
+                  <p className="opacity-75 text-justify">
+                    Automatically determines which prerequisite action must happen first before larger plans unfold.
+                  </p>
+                </div>
+                <div 
+                  className="p-3.5 rounded-2xl border text-xs space-y-1"
+                  style={{ backgroundColor: activeThemeConfig.chipBg, borderColor: activeThemeConfig.border }}
+                >
+                  <div className="font-bold flex items-center gap-1.5" style={{ color: activeThemeConfig.primary }}>
+                    <Compass className="h-3.5 w-3.5" />
+                    <span>Goal Alignment</span>
+                  </div>
+                  <p className="opacity-75">
+                    Connects specific journal action items directly to your high-level personal and professional aspirations.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Atlas Geotags */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-start gap-2 hover:border-rose-300 transition-colors">
-              <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
-                <MapPin className="h-4 w-4" />
+            {/* Step 3: Mind Tree — Semantic Idea Evolution Graph */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                03
               </div>
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Atlas Geotags</span>
-                <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                  Location coordinates & memory maps
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Knowledge Mapping
                 </span>
+                <span className="text-xs opacity-60">• Semantic graph intelligence</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Mind Tree: Connecting Hidden Dots Across Time
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Human insights rarely occur in a linear sequence; they emerge across sporadic weeks, sudden late-night epiphanies, and recurring observations. The Mind Tree visualizes your journal entries as an interactive semantic network graph. It reveals conceptual bridges between seemingly disparate sessions, displays evolutionary branch paths, and demonstrates how a casual question written three weeks ago sparked the breakthrough you achieved today.
+              </p>
+            </div>
+
+            {/* Step 4: Mind Garden — The Living Biological Growth Map */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                04
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Living Organism
+                </span>
+                <span className="text-xs opacity-60">• Seasonal adaptation</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Mind Garden: Your Thinking Grown as a Living Tree
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Rather than dry metrics or bar charts, your intellectual maturity is rendered as One Living Tree. Deep subterranean roots anchor your foundational life philosophies; the sturdy trunk channels core commitments; expanding boughs track evolving interests; budding leaves represent fresh creative sparks; and ripe fruits symbolize finished projects and major life breakthroughs. The garden dynamically reflects nature itself, shifting its foliage and atmosphere alongside the actual seasons and weather outside your window.
+              </p>
+            </div>
+
+            {/* Step 5: Unfinished Thought Resumption & Memory Radar */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                05
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Thought Continuity
+                </span>
+                <span className="text-xs opacity-60">• Never lose an idea</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Unfinished Thread Resumption: Rekindling Abandoned Sparks
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                How many incredible brainstorms have you started, only to get interrupted and completely forget about them? The Brainstorming Journal continuously listens to the continuity of your work. It intelligently identifies open loops, unsolved questions, and abandoned threads, presenting a gentle banner on your dashboard that invites you to resume that train of thought with full contextual recall when inspiration strikes.
+              </p>
+            </div>
+
+            {/* Step 6: Emotional Well-Being & Mood Correlation Analytics */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                06
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Emotional Intelligence
+                </span>
+                <span className="text-xs opacity-60">• Sentiment & energy trends</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Mood Correlation & Cognitive Valence Analytics
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Reflecting on ideas requires an honest relationship with your emotional energy. The journal automatically evaluates the emotional valence, sentiment trajectory, and cognitive tone of each entry. It pairs your feelings with categories, time of day, and environmental contexts—revealing when you brainstorm most creatively, when you experience cognitive fatigue, and how your mindset evolves across writing streaks.
+              </p>
+            </div>
+
+            {/* Step 7: Goal Milestones & Life Alignment */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                07
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Goal Setting
+                </span>
+                <span className="text-xs opacity-60">• Short-term & Long-term vision</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Integrated Goal Tracking & Milestone Alignment
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Keep the grand vision aligned with daily efforts. Maintain customized short-term horizons and long-term North Star goals right alongside your writing canvas. The AI can also analyze your recent journaling patterns to recommend new growth goals, helping you bridge the gap between where you currently stand and where you want to be.
+              </p>
+            </div>
+
+            {/* Step 8: Sensory Grounding & Tactile Aesthetic Experience */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                08
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Sensory Experience
+                </span>
+                <span className="text-xs opacity-60">• Atmosphere, atlas & tactile paper</span>
+              </div>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Atmospheric Memory & Tactile Paper Themes
+              </h3>
+
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Memories are sensory. Brainstorming Journal records the full physical context of each reflection: live temperature and atmospheric weather tags, GPS location atlas coordinates, and personal photo uploads. All of this is wrapped inside a beautifully styled paper canvas with authentic stationery choices—including Cream, Parchment, Kraft, and Moleskine textures, customizable ruling grids, and soothing light or dark palettes that ease ocular strain.
+              </p>
+            </div>
+
+            {/* Step 9: Organization & Uncompromising Privacy */}
+            <div className="relative group space-y-3">
+              <div 
+                className="absolute -left-[31px] sm:-left-[47px] top-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-xs transition-transform group-hover:scale-110"
+                style={{ 
+                  backgroundColor: activeThemeConfig.paperBg,
+                  borderColor: activeThemeConfig.primary,
+                  color: activeThemeConfig.primary
+                }}
+              >
+                09
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span 
+                  className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  style={{ 
+                    backgroundColor: activeThemeConfig.chipBg, 
+                    color: activeThemeConfig.primary,
+                    borderColor: activeThemeConfig.border 
+                  }}
+                >
+                  Security & Architecture
+                </span>
+                <span className="text-xs opacity-60">• User-isolated Firestore & Google Auth</span>
               </div>
             </div>
 
-            {/* Calendar */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-start gap-2 hover:border-blue-300 transition-colors">
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-                <Calendar className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Calendar</span>
-                <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                  Chronological timeline & streaks
-                </span>
-              </div>
-            </div>
+          </div>
+        </section>
 
-            {/* Mind Network & Flowchart */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-start gap-2 hover:border-indigo-300 transition-colors">
-              <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
-                <Workflow className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Connect Dots</span>
-                <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                  Mind maps & optional flowcharts
-                </span>
-              </div>
+        {/* 4. Competition Showcase Summary Banner */}
+        <section 
+          className="p-6 sm:p-10 rounded-3xl border transition-colors space-y-6"
+          style={{ 
+            backgroundColor: activeThemeConfig.chipBg,
+            borderColor: activeThemeConfig.border
+          }}
+        >
+          <div className="max-w-7xl space-y-3">
+            <div 
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+              style={{ color: activeThemeConfig.primary }}
+            >
+              <Target className="h-4 w-4" />
+              <span>Ready for the Competition</span>
             </div>
+            <h3 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight">
+              A Complete Thinking Environment Crafted for Real-World Impact
+            </h3>
+            <p className="text-xs sm:text-sm opacity-80 leading-relaxed font-normal text-justify">
+              From raw thought capture to Socratic refinement, semantic connection mapping in the Mind Tree, living visual growth in the Mind Garden, and tactical action execution—Brainstorming Journal gives every thinker the clarity, momentum, and direction needed to succeed.
+            </p>
+          </div>
 
-            {/* Socratic Partner */}
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-start gap-2 hover:border-purple-300 transition-colors">
-              <div className="p-2 rounded-xl bg-purple-50 text-purple-600">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="text-xs font-bold text-slate-800 block">Socratic AI</span>
-                <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                  Probing prompts & reflections
-                </span>
-              </div>
-            </div>
+          <div className="pt-2 flex items-center gap-4 flex-wrap">
+            {user ? (
+              <button
+                id="landing-footer-cta-btn"
+                onClick={onStartJournal}
+                className="px-7 py-3 rounded-full text-white font-bold text-sm shadow-md hover:opacity-95 transition-all transform hover:-translate-y-0.5 inline-flex items-center gap-2 cursor-pointer"
+                style={{ backgroundColor: activeThemeConfig.primary }}
+              >
+                <span>Enter Brainstorming Journal</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                id="landing-footer-cta-btn"
+                onClick={onSignIn}
+                disabled={isLoading}
+                className="px-7 py-3 rounded-full text-white font-bold text-sm shadow-md hover:opacity-95 transition-all transform hover:-translate-y-0.5 inline-flex items-center gap-2 cursor-pointer"
+                style={{ backgroundColor: activeThemeConfig.primary }}
+              >
+                <span>Start Brainstorming with Google</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
+            <span className="text-xs opacity-60 font-medium">Free, private, and synced to Google Cloud</span>
           </div>
         </section>
       </main>
 
       {/* Refined Footer */}
-      <footer className="mx-auto w-full max-w-5xl px-4 sm:px-8 py-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2 mt-8">
+      <footer 
+        className="mx-auto w-full max-w-7xl px-4 sm:px-8 py-6 border-t flex flex-col sm:flex-row items-center justify-between text-xs opacity-75 gap-3 mt-12 transition-colors"
+        style={{ borderColor: activeThemeConfig.border }}
+      >
         <div className="flex items-center gap-4 flex-wrap">
-          <span className="flex items-center gap-1.5 text-teal-800 font-semibold">
-            <ShieldCheck className="h-4 w-4 text-teal-600" />
+          <span className="flex items-center gap-1.5 font-semibold" style={{ color: activeThemeConfig.primary }}>
+            <ShieldCheck className="h-4 w-4" />
             Cloud Firestore Synced
           </span>
           <span>•</span>
-          <span className="flex items-center gap-1.5 text-slate-600">
-            <Lock className="h-3.5 w-3.5 text-slate-400" />
+          <span className="flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 opacity-60" />
             Private & Owner-Bound
           </span>
           <span>•</span>
-          <span className="flex items-center gap-1.5 text-slate-600">
+          <span className="flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
             Gemini Socratic AI
           </span>
         </div>
-        <p className="text-[11px] opacity-80">© Brainstorm Journal & AI Thought Companion</p>
+        <p className="text-[11px] opacity-80 text-justify">© Brainstorming Journal • AI Thought Partner & Direction Engine</p>
       </footer>
     </div>
+    <ThemeModal
+      isOpen={isThemeModalOpen}
+      onClose={() => setIsThemeModalOpen(false)}
+      theme={activeTheme}
+      onUpdateTheme={onUpdateTheme!}
+    />
+    </>
   );
 };
