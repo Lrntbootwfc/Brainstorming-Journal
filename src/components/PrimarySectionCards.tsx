@@ -355,55 +355,7 @@ export const PrimarySectionCards: React.FC<PrimarySectionCardsProps> = ({
             </div>
           </div>
 
-          {/* 5. Projects */}
-          <div 
-            id="card-create-projects"
-            className="rounded-3xl p-5 sm:p-6 border shadow-2xs flex flex-col justify-between transition-all hover:shadow-xs"
-            style={{
-              backgroundColor: themeConfig.paperCardBg,
-              borderColor: themeConfig.border,
-            }}
-          >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span 
-                  className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full border"
-                  style={{
-                    backgroundColor: themeConfig.chipBg,
-                    color: themeConfig.primary,
-                    borderColor: themeConfig.border,
-                  }}
-                >
-                  Workspace
-                </span>
-                <Folder className="h-4 w-4 opacity-60" style={{ color: themeConfig.primary }} />
-              </div>
-              <h4 className="font-serif text-lg font-bold" style={{ color: themeConfig.inkColor }}>
-                Projects
-              </h4>
-              <p className="text-xs opacity-75 mt-1 leading-relaxed">
-                Group interconnected thoughts, deep research notes, and creative brainstorms into distinct project folders.
-              </p>
 
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs font-bold px-2.5 py-1 rounded-lg border" style={{ backgroundColor: themeConfig.chipBg, borderColor: themeConfig.border, color: themeConfig.inkColor }}>
-                  {customFolders.length} Project {customFolders.length === 1 ? 'Folder' : 'Folders'}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t flex items-center justify-between" style={{ borderColor: themeConfig.border }}>
-              <span className="text-[11px] opacity-60">Folders & collections</span>
-              <button
-                onClick={() => onOpenFeatureView('projects')}
-                className="px-3.5 py-1.5 rounded-full text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs hover:opacity-90 active:scale-98 transition-all cursor-pointer"
-                style={{ backgroundColor: themeConfig.primary }}
-              >
-                <span>View Projects</span>
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
 
           {/* 6. Mind Maps */}
           <div 
@@ -787,50 +739,6 @@ export const PrimarySectionCards: React.FC<PrimarySectionCardsProps> = ({
                 style={{ backgroundColor: themeConfig.primary }}
               >
                 <span>Open Calendar</span>
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-
-          {/* 4. Mood + Context Correlation */}
-          <div 
-            id="card-reflect-mood-correlation"
-            className="rounded-3xl p-5 sm:p-6 border shadow-2xs flex flex-col justify-between transition-all hover:shadow-xs"
-            style={{
-              backgroundColor: themeConfig.paperCardBg,
-              borderColor: themeConfig.border,
-            }}
-          >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span 
-                  className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full border"
-                  style={{
-                    backgroundColor: themeConfig.chipBg,
-                    color: themeConfig.primary,
-                    borderColor: themeConfig.border,
-                  }}
-                >
-                  Correlation
-                </span>
-                <Activity className="h-4 w-4 opacity-60" style={{ color: themeConfig.primary }} />
-              </div>
-              <h4 className="font-serif text-lg font-bold" style={{ color: themeConfig.inkColor }}>
-                Mood + Context Correlation
-              </h4>
-              <p className="text-xs opacity-75 mt-1.5 leading-relaxed">
-                See how external factors like weather, weekday, and physical locations correlate with your emotional well-being.
-              </p>
-            </div>
-
-            <div className="mt-5 pt-3 border-t flex items-center justify-between" style={{ borderColor: themeConfig.border }}>
-              <span className="text-[11px] opacity-60 font-medium">Context insights</span>
-              <button
-                onClick={() => onOpenFeatureView('mood-correlation')}
-                className="px-3.5 py-1.5 rounded-full text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs hover:opacity-90 active:scale-98 transition-all cursor-pointer"
-                style={{ backgroundColor: themeConfig.primary }}
-              >
-                <span>View Correlation</span>
                 <ArrowRight className="h-3 w-3" />
               </button>
             </div>

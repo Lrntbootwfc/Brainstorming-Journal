@@ -954,14 +954,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider" style={{ color: themeConfig.inkColor }}>
                       {activeFeatureView === 'thought-to-action' ? 'Thought → Action (Task Dependencies & Intelligent Ordering)' :
-                       activeFeatureView === 'goals' ? 'Goals and Planning (with Study Tracking)' :
-                       activeFeatureView === 'projects' ? 'Projects & Collections' :
-                       activeFeatureView === 'mind-maps' ? 'Mind Maps (Interactive Thought Web)' :
-                       activeFeatureView === 'connect-dots' ? 'Connect the Dots (Mind Tree, Flowcharts, Mind Map & Story Threads)' :
-                       activeFeatureView === 'summaries' ? 'AI-generated Summaries' :
-                       activeFeatureView === 'mood-calendar' ? 'Mood Calendar' :
-                       activeFeatureView === 'mood-correlation' ? 'Mood + Context Correlation' :
-                       activeFeatureView.replace(/-/g, ' ')}
+                      activeFeatureView === 'goals' ? 'Goals and Planning (with Study Tracking)' :
+                      
+                      activeFeatureView === 'mind-maps' ? 'Mind Maps (Interactive Thought Web)' :
+                      activeFeatureView === 'connect-dots' ? 'Connect the Dots (Mind Tree, Flowcharts, Mind Map & Story Threads)' :
+                      activeFeatureView === 'summaries' ? 'AI-generated Summaries' :
+                      activeFeatureView === 'mood-calendar' ? 'Mood Calendar' :
+                      
+                      activeFeatureView.replace(/-/g, ' ')}
                     </span>
                   </div>
                 </div>
@@ -1270,7 +1270,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {sessions.filter(s => s.summary).slice(0, 8).map((s) => (
+                      {sessions
+                      .filter(s => !(s.withoutAI && s.includeInAIHistory === false) && s.includeInAIHistory !== false)
+                      .filter(s => s.summary || (Array.isArray(s.messages) && s.messages.length > 0))
+                      .map((s) => (
                       <div
                         key={s.id}
                         onClick={() => onSelectSession(s.id)}

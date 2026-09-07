@@ -401,6 +401,28 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
                 </div>
               </div>
 
+                            {/* Include in AI History Toggle */}
+              <div className="p-3 rounded-2xl border flex items-center justify-between gap-3" style={{ backgroundColor: themeConfig.chipBg, borderColor: themeConfig.border }}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold" style={{ color: themeConfig.inkColor }}>Include in AI History?</span>
+                  <span className="text-[10px] opacity-70">Allows AI to summarize & reflect on entry</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={session.includeInAIHistory !== false}
+                    onChange={(e) => onUpdateSession({ includeInAIHistory: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div 
+                    className="w-8 h-4 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all"
+                    style={{
+                      backgroundColor: session.includeInAIHistory !== false ? themeConfig.primary : (theme.darkMode ? '#374151' : '#d1d5db')
+                    }}
+                  />
+                </label>
+              </div>
+
               {/* Weather */}
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wide opacity-60 mb-2">Weather</p>

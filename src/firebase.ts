@@ -3,6 +3,8 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   User 
@@ -26,9 +28,7 @@ export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // Initialize Auth
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+
 
 // Initialize Firestore with custom databaseId if configured
 export const db = firebaseConfigJson.firestoreDatabaseId && firebaseConfigJson.firestoreDatabaseId !== '(default)'
@@ -36,8 +36,30 @@ export const db = firebaseConfigJson.firestoreDatabaseId && firebaseConfigJson.f
   : getFirestore(app);
 
 export const signInWithGoogle = async (): Promise<User> => {
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error: any) {
+    if (
+      error.code === 'auth/popup-blocked' ||
+      error.code === 'auth/cancelled-popup-request' ||
+      (error.message && error.message.toLowerCase().includes('popup'))
+    ) {
+      console.warn('Popup authentication interrupted by browser policy, switching to redirect flow...');
+      await signInWithRedirect(auth, googleProvider);
+    }
+    throw error;
+  }
+};
+
+export const checkRedirectResult = async (): Promise<User | null> => {
+  try {
+    const result = await getRedirectResult(auth);
+    return result ? result.user : null;
+  } catch (error) {
+    console.error('Redirect authentication error:', error);
+    return null;
+  }
 };
 
 export const logOut = async (): Promise<void> => {

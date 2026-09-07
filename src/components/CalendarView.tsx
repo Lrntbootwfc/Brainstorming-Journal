@@ -180,7 +180,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         dayNumber: dayNum,
         isCurrentMonth: false,
         isToday: dateString === todayKey,
-        mood: dailyMoods[dateString]?.mood,
+        mood: dailyMoods[dateString]?.mood || (sessions.find((s) => s.createdAt.startsWith(dateString) && s.mood)?.mood as any),
         sessionCount: sessions.filter((s) => s.createdAt.startsWith(dateString)).length,
       });
     }
@@ -195,7 +195,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         dayNumber: dayNum,
         isCurrentMonth: true,
         isToday: dateString === todayKey,
-        mood: dailyMoods[dateString]?.mood,
+        mood: dailyMoods[dateString]?.mood || (sessions.find((s) => s.createdAt.startsWith(dateString) && s.mood)?.mood as any),
         sessionCount: sessions.filter((s) => s.createdAt.startsWith(dateString)).length,
       });
     }

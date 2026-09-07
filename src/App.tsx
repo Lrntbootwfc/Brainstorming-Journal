@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User } from 'firebase/auth';
-import { auth, signInWithGoogle, logOut, onAuthStateChanged } from './firebase';
+import { auth, signInWithGoogle, logOut, onAuthStateChanged, checkRedirectResult } from './firebase';
 import { 
   fetchUserSessions, 
   saveJournalSession, 
@@ -21,6 +21,7 @@ import { LandingPage } from './components/LandingPage';
 import { DashboardView } from './components/DashboardView';
 import { JournalEditor } from './components/JournalEditor';
 import { HistorySidebar } from './components/HistorySidebar';
+
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -117,6 +118,7 @@ export default function App() {
 
   // Auth State Listener
   useEffect(() => {
+    checkRedirectResult().catch(console.warn);
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
@@ -419,10 +421,27 @@ export default function App() {
     });
   };
 
+    const purgeCurrentSessionIfEmpty = () => {
+    if (!currentSession || !user) return;
+    const isNoMessages = !currentSession.messages || currentSession.messages.length === 0;
+    const isDefaultTitle = !currentSession.title || currentSession.title === 'New Reflection' || currentSession.title === 'Pure Journaling (Without AI)';
+    if (isNoMessages && isDefaultTitle) {
+      deleteJournalSession(user.uid, currentSession.id).catch(console.error);
+      setSessions((prev) => prev.filter((s) => s.id !== currentSession.id));
+    }
+  };
+
+  const handleBackToDashboard = () => {
+    purgeCurrentSessionIfEmpty();
+    setActiveView('dashboard');
+  };
+
   const handleSelectSession = (sessionId: string) => {
+    purgeCurrentSessionIfEmpty();
     setActiveSessionId(sessionId);
     setActiveView('editor');
   };
+  
 
   const handleDeleteSession = async (sessionId: string) => {
     if (!user) return;
@@ -641,11 +660,16 @@ export default function App() {
       const contentType = res.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
         const summaryData = await res.json();
+        const inferredMood = summaryData.sentiment || summaryData.mood || 
+          (summaryData.summary && summaryData.summary.toLowerCase().includes('happy') ? 'Happy' : 
+          summaryData.summary && (summaryData.summary.toLowerCase().includes('anxious') || summaryData.summary.toLowerCase().includes('stress')) ? 'Low' : 'Calm');
         const enriched: JournalSession = {
           ...sessionToSummarize,
           title: summaryData.title || sessionToSummarize.title,
           category: summaryData.category || sessionToSummarize.category || 'Journal',
           summary: summaryData.summary || undefined,
+          mood: sessionToSummarize.mood || inferredMood,
+          
           keyInsights: summaryData.keyInsights || undefined,
           sentiment: summaryData.sentiment || undefined,
           actionItems: summaryData.actionItems || undefined,
@@ -773,7 +797,7 @@ export default function App() {
             onUpdateSession={handleUpdateSession}
             onSendMessage={handleSendMessage}
             onGenerateSummary={handleGenerateSummary}
-            onBackToDashboard={() => setActiveView('dashboard')}
+            onBackToDashboard={handleBackToDashboard}
             isGenerating={isGenerating}
             isSummarizing={isSummarizing}
             saveStatus={saveStatus}
