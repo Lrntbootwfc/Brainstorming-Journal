@@ -219,7 +219,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </h1>
 
             <p className="text-sm sm:text-base text-slate-200 max-w-7xl font-normal leading-relaxed text-justify">
-              Sabhi ideas shuruat mein bikhre hue aur adhure hote hain. Brainstorming Journal aapke vicharon ko ek shant, deep sochne wale companion ke saath aage badhata hai—jo na sirf aapko sunta hai, balki har ek idea ko realistic action steps mein badal kar aapko ek saaf direction provide karta hai.
+              Every idea begins scattered and incomplete. The Brainstorming Journal walks alongside your thinking like a calm, thoughtful companion, one that doesn't just listen to your ideas but helps shape them into realistic action steps, giving you a clear sense of direction.
             </p>
 
             {/* Primary Action Button inside Hero */}
@@ -455,7 +455,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </h3>
 
               <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
-                Human insights rarely occur in a linear sequence; they emerge across sporadic weeks, sudden late-night epiphanies, and recurring observations. The Mind Tree visualizes your journal entries as an interactive semantic network graph. It reveals conceptual bridges between seemingly disparate sessions, displays evolutionary branch paths, and demonstrates how a casual question written three weeks ago sparked the breakthrough you achieved today.
+                Ideas rarely show up in a neat order. A thought from three weeks ago often connects to something you wrote today, even if you never noticed the link while it was happening. The Mind Tree takes your journal entries and organizes them into a single visual, structured like a tree, so those connections become easy to see at a glance.
+The roots represent your foundational ideas and philosophies, the beliefs and principles that quietly shape everything else you write. The branches represent the topics and interests you're actively exploring right now, the threads you keep coming back to. The leaves represent newer, still-forming ideas, the sparks that haven't fully taken shape yet. The fruits represent finished projects and completed goals, the moments where an idea actually became something real.
+Instead of scrolling through entries one at a time trying to remember how things fit together, you get one image that lays out the whole picture of where your thinking has been and where it's headed.
               </p>
             </div>
 
@@ -481,17 +483,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     borderColor: activeThemeConfig.border 
                   }}
                 >
-                  Living Organism
+                  Emotional Intelligence
                 </span>
-                <span className="text-xs opacity-60">• Seasonal adaptation</span>
+                <span className="text-xs opacity-60">•  Mood extraction</span>
               </div>
 
               <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
-                Mind Garden: Your Thinking Grown as a Living Tree
+                Mood Extraction & Calendar Reflection
               </h3>
 
               <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
-                Rather than dry metrics or bar charts, your intellectual maturity is rendered as One Living Tree. Deep subterranean roots anchor your foundational life philosophies; the sturdy trunk channels core commitments; expanding boughs track evolving interests; budding leaves represent fresh creative sparks; and ripe fruits symbolize finished projects and major life breakthroughs. The garden dynamically reflects nature itself, shifting its foliage and atmosphere alongside the actual seasons and weather outside your window.
+                Writing regularly says a lot about how you're feeling, even when you're not directly writing about your feelings. The journal reads the tone of each entry as you write it and picks up on the underlying mood automatically, so you never have to stop and manually tag how you felt that day.
+                Those moods are then plotted on a calendar view, giving you a simple visual timeline of your emotional patterns. You can look back across a week and notice a rough stretch, scroll through a full month and spot the days that stood out, or look across a season and see how your overall mindset has shifted over time. It turns something usually invisible, like your emotional rhythm, into something you can actually see and reflect on.
               </p>
             </div>
 
@@ -553,17 +556,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     borderColor: activeThemeConfig.border 
                   }}
                 >
-                  Emotional Intelligence
+                  Visual Aspiration
                 </span>
-                <span className="text-xs opacity-60">• Sentiment & energy trends</span>
+                <span className="text-xs opacity-60">• Curated imagery</span>
               </div>
 
               <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
-                Mood Correlation & Cognitive Valence Analytics
+                Vision Board: A Visual Space for What You're Working Toward
               </h3>
 
               <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
-                Reflecting on ideas requires an honest relationship with your emotional energy. The journal automatically evaluates the emotional valence, sentiment trajectory, and cognitive tone of each entry. It pairs your feelings with categories, time of day, and environmental contexts—revealing when you brainstorm most creatively, when you experience cognitive fatigue, and how your mindset evolves across writing streaks.
+                Some goals are easier to hold onto as a picture than as a sentence. The Vision Board gives you a dedicated space to pin images and quotes that represent the direction you're heading in, sitting right alongside the goals and plans you've already written down.
+
+Whether it's a place you're saving up to visit, a version of your daily routine you're building toward, or a project you can already picture finished, the Vision Board keeps that image in front of you every time you open the journal. Pairing your written goals with a visual reference makes the whole thing feel less like a task list and more like a direction you're actively moving toward.
               </p>
             </div>
 
@@ -635,7 +640,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </h3>
 
               <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
-                Memories are sensory. Brainstorming Journal records the full physical context of each reflection: live temperature and atmospheric weather tags, GPS location atlas coordinates, and personal photo uploads. All of this is wrapped inside a beautifully styled paper canvas with authentic stationery choices—including Cream, Parchment, Kraft, and Moleskine textures, customizable ruling grids, and soothing light or dark palettes that ease ocular strain.
+                Memory is tied to more than just words. The journal captures a bit of the physical context around each entry, like the weather or temperature at the time you were writing, adding a small layer of atmosphere to what you recorded that day.
+
+On top of that, the journal itself is designed to feel like real paper rather than a plain digital box. You can choose from several stationery styles, including Cream, Parchment, Kraft, and Moleskine textures, along with customizable ruling grids to match how you like to write. Light and dark palettes are both available too, so the journal stays comfortable to read whether you're writing in the morning or late at night.
               </p>
             </div>
 
@@ -651,6 +658,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               >
                 09
               </div>
+              
 
               <div className="flex items-center gap-2.5">
                 <span 
@@ -665,6 +673,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </span>
                 <span className="text-xs opacity-60">• User-isolated Firestore & Google Auth</span>
               </div>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Built on a Foundation of Privacy
+              </h3>
+              <p className="text-sm opacity-85 leading-relaxed max-w-7xl text-justify">
+                Journaling only works if you trust the space you're writing in. Every entry is stored in a user-isolated Firestore instance, meaning your data is kept logically separate from every other user's account, with no shared collections and no risk of cross-account exposure.
+
+Sign-in runs through Google Authentication, so you get a secure and familiar login process without needing to create or remember another password. Together, these choices mean the journal is built from the ground up with privacy as a starting point, not an afterthought, so your reflections stay yours.
+              </p>
+
             </div>
 
           </div>
